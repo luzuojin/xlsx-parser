@@ -5,6 +5,14 @@ import java.util.ArrayList;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.XMLEvent;
 
+
+/**
+  <sheetData>
+    <row spans='1:99'>
+      ...
+    </row>
+  </sheetData>
+ */
 @SuppressWarnings("serial")
 public class Sheet extends ArrayList<Row> {
     
