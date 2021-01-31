@@ -1,8 +1,6 @@
 package dev.xframe.xlsx;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -15,20 +13,16 @@ import javax.xml.stream.events.XMLEvent;
  {...cell}
  </['http://schemas.openxmlformats.org/spreadsheetml/2006/main']::row>
  */
-public class Row implements Iterable<Cell> {
+@SuppressWarnings("serial")
+public class Row extends ArrayList<Cell> {
+	
+	private int rowNum = -1;
     
-    private int rowNum = -1;
-    
-    private List<Cell> cells = new ArrayList<>();
-
     public int getRowNum() {
 		return rowNum;
 	}
-	public List<Cell> getCells() {
-		return cells;
-	}
 
-    public Row readFrom(XMLEventReader reader, Workbook workbook) throws XMLStreamException {
+    Row readFrom(XMLEventReader reader, Workbook workbook) throws XMLStreamException {
         do {
             XMLEvent event = reader.peek();
             if(event.isEndElement()) {
@@ -36,7 +30,7 @@ public class Row implements Iterable<Cell> {
                 break;//结束row </['http://schemas.openxmlformats.org/spreadsheetml/2006/main']::row>
             }
             if(this.rowNum != -1) {//{...Cell}
-            	cells.add(new Cell().readFrom(reader, workbook));
+            	add(new Cell().readFrom(reader, workbook));
                 continue;
             }
             if (event.isStartElement()) {//开始row <['http://schemas.openxmlformats.org/spreadsheetml/2006/main']::row spans='1:20' r='2'>
@@ -50,14 +44,4 @@ public class Row implements Iterable<Cell> {
         return this;
     }
     
-    @Override
-    public Iterator<Cell> iterator() {
-        return cells.iterator();
-    }
-    
-    @Override
-    public String toString() {
-        return cells.toString();
-    }
-
 }

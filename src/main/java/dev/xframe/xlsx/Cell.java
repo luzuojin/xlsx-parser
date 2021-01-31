@@ -21,9 +21,9 @@ t:type ['s':sharedString, v:sharedStrings.index)
 public class Cell {
     
     private String cellNum;
+    private String type;
     private String style;
     private String value;
-    private String type;
     
     private boolean isShared;
 
@@ -44,7 +44,7 @@ public class Cell {
         return value;
     }
 
-    public Cell readFrom(XMLEventReader reader, Workbook workbook) throws XMLStreamException {
+    Cell readFrom(XMLEventReader reader, Workbook workbook) throws XMLStreamException {
         do {
             XMLEvent event = reader.peek();
             if(event.isEndElement()) {

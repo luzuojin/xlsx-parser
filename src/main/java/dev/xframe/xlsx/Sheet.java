@@ -1,30 +1,15 @@
 package dev.xframe.xlsx;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.XMLEvent;
 
-public class Sheet implements Iterable<Row> {
+@SuppressWarnings("serial")
+public class Sheet extends ArrayList<Row> {
     
-    private static final String XL_FILE = "xl/worksheets/sheet%d.xml";
+	private static final String XL_FILE = "xl/worksheets/sheet%d.xml";
     
-    private List<Row> rows = new ArrayList<>();
-
-    public int rows() {
-        return rows.size();
-    }
-    
-    public List<Row> getRows() {
-        return rows;
-    }
-    
-    public Iterator<Row> iterator() {
-        return rows.iterator();
-    }
-
     Sheet readFrom(FileSet fs, Workbook workbook, int sheetIndex) throws Exception {
         XMLEventReader reader = fs.newEventReader(String.format(XL_FILE, sheetIndex));
         boolean isSheedStarted = false;
@@ -35,14 +20,14 @@ public class Sheet implements Iterable<Row> {
                 break;
             }
             if(isSheedStarted) {
-                rows.add(new Row().readFrom(reader, workbook));
+                add(new Row().readFrom(reader, workbook));
                 continue;
             }
             //sheet start
             if(event.isStartElement() && event.asStartElement().getName().getLocalPart().equalsIgnoreCase("sheetData")) {
                 isSheedStarted = true;
             }
-            reader.next();
+            reader.next();//skip not [sheetData] element
         }
         reader.close();
         return this;
