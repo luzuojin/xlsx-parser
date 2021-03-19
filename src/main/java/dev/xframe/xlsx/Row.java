@@ -1,7 +1,9 @@
 package dev.xframe.xlsx;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -56,36 +58,36 @@ public class Row implements Iterable<Cell> {
 		}
 	}
     Row readFrom(XMLEventReader reader, Workbook workbook) throws XMLStreamException {
+        List<Cell> tCells = new ArrayList<>();
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
         do {
             XMLEvent event = reader.peek();
             if(event.isEndElement()) {
                 reader.next();
+                spans = new int[] {min, max};
+                cells = new Cell[max];
+                tCells.forEach(this::addCell);
                 fillBlanks();
                 break;//结束row </['http://schemas.openxmlformats.org/spreadsheetml/2006/main']::row>
             }
             if(this.rowNum != -1) {//{...Cell}
-            	addCell(new Cell().readFrom(reader, workbook));
+            	Cell cell = new Cell().readFrom(reader, workbook);
+            	min = Math.min(cell.getColumnNum(), min);
+            	max = Math.max(cell.getColumnNum(), max);
+                tCells.add(cell);
                 continue;
             }
             if (event.isStartElement()) {//开始row <['http://schemas.openxmlformats.org/spreadsheetml/2006/main']::row spans='1:20' r='2'>
                 StartElement startElement = event.asStartElement();
                 if (startElement.getName().getLocalPart().equalsIgnoreCase("row")) {
                     this.rowNum = Integer.parseInt(startElement.getAttributeByName(new QName("r")).getValue());
-                    this.spans = splitSpans(startElement.getAttributeByName(new QName("spans")).getValue());
-                    this.cells = new Cell[spans[1]];
                 }
             }
             reader.next();
         } while (reader.hasNext());
         return this;
     }
-	private int[] splitSpans(String value) {
-		int[] r = new int[2];
-		String[] s = value.split(":");
-		r[0] = Integer.parseInt(s[0]);
-		r[1] = Integer.parseInt(s[1]);
-		return r;
-	}
 	public Iterator<Cell> iterator() {
 		return Arrays.asList(cells).iterator();
 	}
