@@ -1,15 +1,15 @@
 package dev.xframe.xlsx;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  <row spans='1:20' r='1'>
@@ -50,25 +50,24 @@ public class Row implements Iterable<Cell> {
 	private void addCell(Cell cell) {
 		cells[cell.getColumnNum() - 1] = cell;
 	}
-	private void fillBlanks() {
-    	for (int i = 0; i < cells.length; i++) {
-			if(cells[i] == null) {
-				cells[i] = Cell.blank(rowNum, i+1);
-			}
-		}
-	}
+    private void fillData(List<Cell> tCells, int min, int max) {
+        spans = new int[] {Math.min(min, max), max};
+        cells = new Cell[max];
+        tCells.forEach(this::addCell);
+        IntStream.range(0, max) //补全blank
+                .filter(idx -> cells[idx] == null)
+                .forEach(idx -> cells[idx] = Cell.blank(rowNum, idx + 1));
+    }
+
     Row readFrom(XMLEventReader reader, Workbook workbook) throws XMLStreamException {
         List<Cell> tCells = new ArrayList<>();
         int min = Integer.MAX_VALUE;
-        int max = Integer.MIN_VALUE;
+        int max = 0;
         do {
             XMLEvent event = reader.peek();
             if(event.isEndElement()) {
                 reader.next();
-                spans = new int[] {min, max};
-                cells = new Cell[max];
-                tCells.forEach(this::addCell);
-                fillBlanks();
+                fillData(tCells, min, max);
                 break;//结束row </['http://schemas.openxmlformats.org/spreadsheetml/2006/main']::row>
             }
             if(this.rowNum != -1) {//{...Cell}
@@ -88,7 +87,8 @@ public class Row implements Iterable<Cell> {
         } while (reader.hasNext());
         return this;
     }
-	public Iterator<Cell> iterator() {
+
+    public Iterator<Cell> iterator() {
 		return Arrays.asList(cells).iterator();
 	}
 	@Override
